@@ -1,6 +1,9 @@
 import React, { Component } from 'react';
 import { Redirect } from 'react-router-dom';
 import { baseUrl } from './config';
+import { connect } from 'react-redux'
+
+import { login } from './store/authentication.js';
 
 class LoginPanel extends Component {
   constructor(props) {
@@ -14,17 +17,7 @@ class LoginPanel extends Component {
 
   async handleSubmit(e) {
     e.preventDefault();
-    const response = await fetch(`${baseUrl}/session`, {
-      method: 'put',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(this.state),
-    });
-
-    if (response.ok) {
-      const { token } = await response.json();
-      this.props.updateToken(token);
-      this.setState({ token });
-    }
+    this.props.login(this.state.email, this.state.password);
   }
 
   updateEmail = e => {
@@ -36,20 +29,20 @@ class LoginPanel extends Component {
   }
 
   render() {
-    if (this.state.token) {
+    if (this.props.token) {
       return <Redirect to="/" />;
     }
     return (
       <main className="centered middled">
         <form onSubmit={this.handleSubmit}>
           <input type="text"
-                placeholder="Email"
-                value={this.state.email}
-                onChange={this.updateEmail} />
+            placeholder="Email"
+            value={this.state.email}
+            onChange={this.updateEmail} />
           <input type="password"
-                placeholder="Password"
-                value={this.state.password}
-                onChange={this.updatePassword} />
+            placeholder="Password"
+            value={this.state.password}
+            onChange={this.updatePassword} />
           <button type="submit">Login</button>
         </form>
       </main>
@@ -57,4 +50,24 @@ class LoginPanel extends Component {
   }
 }
 
-export default LoginPanel;
+const mapStateToProps = state => {
+  return {
+    token: state.authentication.token
+  };
+};
+
+const mapDispatchToProps = dispatch => {
+  return {
+    login: (email, password) => dispatch(login(email, password))
+  };
+};
+
+// Yes, this looks funny, but you will often
+// see this kind of indentation in others'
+// code when using React and Redux.
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(
+  LoginPanel
+);

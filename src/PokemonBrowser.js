@@ -1,11 +1,13 @@
 import React, { Component } from 'react';
 import { NavLink, Route } from 'react-router-dom';
+import { connect } from 'react-redux';
 
 import { imageUrl } from './config';
 import LogoutButton from './LogoutButton';
 import PokemonDetail from './PokemonDetail';
 import PokemonForm from './PokemonForm';
 import Fab from './Fab';
+import getPokemon from './store/pokemon'
 
 class PokemonBrowser extends Component {
   constructor(props) {
@@ -28,9 +30,13 @@ class PokemonBrowser extends Component {
     })
   }
 
+  componentDidMount() {
+    this.props.getPokemon();
+  }
+
   render() {
     const pokemonId = Number.parseInt(this.props.match.params.pokemonId);
-    if (!this.props.pokemon) {
+    if (!this.props.pokeList) {
       return null;
     }
     return (
@@ -38,12 +44,12 @@ class PokemonBrowser extends Component {
         <LogoutButton token={this.props.token} />
         <nav>
           <Fab hidden={this.state.showForm} onClick={this.showForm} />
-          {this.props.pokemon.map(pokemon => {
+          {this.props.pokeList.map(pokemon => {
             return (
               <NavLink key={pokemon.name} to={`/pokemon/${pokemon.id}`}>
                 <div className={pokemonId === pokemon.id ? 'nav-entry is-selected' : 'nav-entry'}>
                   <div className="nav-entry-image"
-                       style={{backgroundImage: `url('${imageUrl}${pokemon.imageUrl}')`}}>
+                    style={{ backgroundImage: `url('${imageUrl}${pokemon.imageUrl}')` }}>
                   </div>
                   <div>
                     <div className="primary-text">{pokemon.name}</div>
@@ -54,7 +60,7 @@ class PokemonBrowser extends Component {
             );
           })}
         </nav>
-        { this.state.showForm ?
+        {this.state.showForm ?
           <PokemonForm token={this.props.token} handleCreated={this.handleCreated} /> :
           <Route path="/pokemon/:id" render={props =>
             <PokemonDetail {...props} token={this.props.token} />
@@ -65,4 +71,18 @@ class PokemonBrowser extends Component {
   }
 }
 
-export default PokemonBrowser;
+const mapStateToProps = (state) => ({
+  pokemon: state.pokeList
+});
+
+const mapDispatchToProps = (dispatch) => ({
+  getPokemon: () => dispatch(getPokemon)
+});
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(
+  PokemonBrowser
+);
+// export default PokemonBrowser;
